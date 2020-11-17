@@ -327,14 +327,19 @@ void passwordChange() {
           twoTones();
           break;
         }
+        else {
+          BT.println(PASS_NOUP);
+          error();
+          break;
+        }
 
       }
-      else {
-        BT.println(PASS_NOUP);
-        error();
-        break;
-      }
+
     }
+  } else {
+    BT.println(PASS_NOUP);
+    error();
+
   }
 }
 
