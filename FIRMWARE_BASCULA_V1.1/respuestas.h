@@ -19,7 +19,7 @@
 #define GUARDAR_VALOR "RC03"
 
 //PASO4 RESPUESTA 1
-//VALOR HA SIDO GUARDADO CORRECTAMENTE
+//El valor ha sido guardado correctamente
 #define VALOR_GUARDADO "RC04"
 
 //PASO4 RESPUESTA 2
@@ -31,3 +31,21 @@
 
 //Confirma el peso recibido para la calibración
 #define EL_PESO "PESO"
+
+//CONTRASEÑA CORRECTA
+#define PASS_OK "PASS_OK"
+
+//CONTRASEÑA INCORRECTA
+#define PASS_INC "PASS_INC"
+
+//CONTRASEÑA ACTUALIZADA
+#define PASS_UPDT "PASS_UPD"
+
+//CONTRSEÑA NO ACTUALIZADA
+#define PASS_NOUP "PASS_NOT"
+
+//Bascula lista para iniciar comprobacion
+#define INIC_PASS "INIC_PASS"
+
+//Bascula lista para recibier nuevo password
+#define NEW_PASS "NEW_PASS"

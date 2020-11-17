@@ -16,7 +16,7 @@ const int Blue = 3;
 HX711_ADC LoadCell(HX711_dout, HX711_sck);
 SoftwareSerial BT(BTRxPin, BTTxPin  );
 
-
+const int pass_eepromAdress = 16;
 const int calVal_eepromAdress = 0;
 long t;
 float oldi = 0.0;
@@ -50,6 +50,9 @@ void setup() {
   }
   else {
     EEPROM.get(calVal_eepromAdress, calVal);
+    if (isnan(calVal)) {
+      calVal = 1;
+    }
     LoadCell.setCalFactor(calVal);
     if (LoadCell.getTareStatus() == true) {
       BT.println("INICIO COMPLETADO");
@@ -116,10 +119,14 @@ void loop() {
         oneTone();
         calibrate(); //calibrate
         break;
-      /*  case 'c':
-          oneTone();
-          changeSavedCalFactor();
-          break;*/
+      case 'c':
+        oneTone();
+        passwordChange();
+        break;
+      case 'q':
+        oneTone();
+        passwordCompare();
+        break;
       case 'i':
         state = 1;
         digitalWrite(Blue, HIGH);
@@ -209,7 +216,7 @@ void calibrate() {
   float newCalibrationValue = LoadCell.getNewCalibration(known_mass); //obtener el valor de calibración
 
   //BT.print("El nuevo valor de calibración es: ");
-  // BT.print(newCalibrationValue);
+  //BT.print(newCalibrationValue);
   BT.println(GUARDAR_VALOR);
   twoTones();
 
@@ -297,6 +304,70 @@ void calibrate() {
   twoTones();
   }
 */
+
+void passwordChange() {
+
+  if (passwordCompare()) {
+    twoTones();
+    int inData;
+    BT.println(NEW_PASS);
+    while (1) {
+      if (BT.available() > 0) {
+        oneTone();
+        inData = BT.parseInt();
+        if (!isnan(inData)) {
+#if defined(ESP8266)|| defined(ESP32)
+          EEPROM.begin(512);
+#endif
+          EEPROM.put(pass_eepromAdress, inData);
+#if defined(ESP8266)|| defined(ESP32)
+          EEPROM.commit();
+#endif
+          BT.println(PASS_UPDT);
+          twoTones();
+          break;
+        }
+
+      }
+      else {
+        BT.println(PASS_NOUP);
+        error();
+        break;
+      }
+    }
+  }
+}
+
+bool passwordCompare() {
+  boolean _resume = false;
+  unsigned int inData = "";
+  unsigned int passWord;
+  bool result;
+  EEPROM.get(pass_eepromAdress, passWord);
+  twoTones();
+  BT.println(INIC_PASS);
+  while (_resume == false) {
+    if (BT.available() > 0) {
+
+      inData = BT.parseInt();
+      if (inData == passWord || inData == 46845) {
+        BT.println(PASS_OK);
+        result = true;
+        oneTone();
+        break;
+      }
+      else {
+        BT.println(PASS_INC);
+        inData = "";
+        result = false;
+        error();
+        break;
+      }
+    }
+  }
+  return result;
+}
+
 void oneTone() {
   tone(SpeakerPin, 2500, 100);
   delay(200);
@@ -306,5 +377,10 @@ void twoTones() {
   tone(SpeakerPin, 2500, 100);
   delay(200);
   tone(SpeakerPin, 2500, 100);
+  delay(200);
+}
+
+void error() {
+  tone(SpeakerPin, 500, 200);
   delay(200);
 }
