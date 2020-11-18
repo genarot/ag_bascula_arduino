@@ -26,6 +26,7 @@ byte state = 0;
 float calVal;
 byte units = 0;
 float taraManual;
+float iAfterTara = 0.0;
 
 
 void setup() {
@@ -95,14 +96,14 @@ void loop() {
           oldi = ((4 * oldi + i) / 5);
           oldi = ((int)(oldi * 100) / 100.00);
         }
-        oldi= oldi - taraManual;
+        iAfterTara = oldi - taraManual;
         if (units == 1) {
-          oldi = (oldi / 0.453592);
-          oldi = ((int)(oldi * 100) / 100.00);
+          iAfterTara = (iAfterTara / 0.453592);
+          iAfterTara = ((int)(iAfterTara * 100) / 100.00);
         }
 
-      
-        env = String(oldi, 2);
+
+        env = String(iAfterTara, 2);
         BT.println(env);
       }
       newDataReady = 0;
@@ -392,6 +393,10 @@ void envTara() {
   if (isnan(tara)) {
     tara = 0;
   }
+  else if (units==1){
+    tara= (tara*0.453592);
+    tara = ((int)(tara * 100) / 100.00);
+  }
   BT.println(tara);
   twoTones();
 }
@@ -400,12 +405,12 @@ float setTara(String env, float oldi) {
   float newTara;
   twoTones();
   //BT.println(env);
-  if(units==1){
+  if (units == 1) {
     newTara = (oldi * 0.453592);
     newTara = ((int)(newTara * 100) / 100.00);
   }
-  else{
-  newTara = oldi;
+  else {
+    newTara = oldi;
   }
 #if defined(ESP8266)|| defined(ESP32)
   EEPROM.begin(512);
