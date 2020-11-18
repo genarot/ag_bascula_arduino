@@ -95,11 +95,13 @@ void loop() {
           oldi = ((4 * oldi + i) / 5);
           oldi = ((int)(oldi * 100) / 100.00);
         }
+        oldi= oldi - taraManual;
         if (units == 1) {
           oldi = (oldi / 0.453592);
           oldi = ((int)(oldi * 100) / 100.00);
         }
 
+      
         env = String(oldi, 2);
         BT.println(env);
       }
@@ -397,8 +399,14 @@ void envTara() {
 float setTara(String env, float oldi) {
   float newTara;
   twoTones();
-  BT.println(env);
+  //BT.println(env);
+  if(units==1){
+    newTara = (oldi * 0.453592);
+    newTara = ((int)(newTara * 100) / 100.00);
+  }
+  else{
   newTara = oldi;
+  }
 #if defined(ESP8266)|| defined(ESP32)
   EEPROM.begin(512);
 #endif
