@@ -16,6 +16,7 @@ const int Blue = 3;
 HX711_ADC LoadCell(HX711_dout, HX711_sck);
 SoftwareSerial BT(BTRxPin, BTTxPin  );
 
+const int tara_eepromAdress = 20;
 const int pass_eepromAdress = 16;
 const int calVal_eepromAdress = 0;
 long t;
@@ -68,14 +69,13 @@ void loop() {
   static boolean newDataReady = 0;
   const int serialPrintInterval = 300;
   //Tomar, procesar y enviar mediciones cuando sea habilitado
-  if (state == 1) {
-    if (LoadCell.update()) newDataReady = true;
-    if (newDataReady) {
-      if (millis() > t + serialPrintInterval) {
-        float i = LoadCell.getData();
+
+  if (LoadCell.update()) newDataReady = true;
+  if (newDataReady) {
+    if (millis() > t + serialPrintInterval) {
+      float i = LoadCell.getData();
+      if (state == 1) {
         i = ((int)(i * 100) / 100.00);
-        //long j = LoadCell.smoothedData();
-        digitalWrite(Tx, HIGH);
         if (abs(i) < 0.1) {
           i = 0;
           oldi = 0;
@@ -87,7 +87,7 @@ void loop() {
 
         }
         else if (abs(i - oldi) < 0.03) {
-          oldi = ((3 * oldi + i) / 4);
+          oldi = ((4 * oldi + i) / 5);
           oldi = ((int)(oldi * 100) / 100.00);
         }
         if (units == 1) {
@@ -96,13 +96,11 @@ void loop() {
         }
 
         env = String(oldi, 2);
-        //        BT.println(503);
         BT.println(env);
-        digitalWrite(Tx, LOW);
-        //Serial.println(env);
-        newDataReady = 0;
-        t = millis();
       }
+      newDataReady = 0;
+      t = millis();
+
     }
   }
   // Recibir comandos de terminal serial
@@ -129,12 +127,12 @@ void loop() {
         break;
       case 'i':
         state = 1;
-        digitalWrite(Blue, HIGH);
+        digitalWrite(Tx, HIGH);
         oneTone();
         break;
       case 'p':
         state = 0;
-        digitalWrite(Blue, LOW);
+        digitalWrite(Tx, LOW);
         oneTone();
         break;
       case 'l':
@@ -144,6 +142,14 @@ void loop() {
       case 'k':
         units = 0;
         oneTone();
+        break;
+      case 'e':
+        envTara();
+        oneTone();
+        break;
+      case 'f':
+        setTara(env, oldi);
+        oneTone;
         break;
     }
   }
@@ -373,6 +379,33 @@ bool passwordCompare() {
   return result;
 }
 
+void envTara() {
+  float tara;
+  EEPROM.get(tara_eepromAdress, tara);
+  if (isnan(tara)) {
+    tara = 0;
+  }
+  BT.println(tara);
+  twoTones();
+}
+
+void setTara(String env, float oldi) {
+  float newTara;
+  twoTones();
+  BT.println(env);
+  newTara = oldi;
+#if defined(ESP8266)|| defined(ESP32)
+  EEPROM.begin(512);
+#endif
+  EEPROM.put(tara_eepromAdress, newTara);
+#if defined(ESP8266)|| defined(ESP32)
+  EEPROM.commit();
+#endif
+  BT.println(NEW_TAR);
+  oneTone();
+  envTara();
+}
+
 void oneTone() {
   tone(SpeakerPin, 2500, 100);
   delay(200);
@@ -387,5 +420,7 @@ void twoTones() {
 
 void error() {
   tone(SpeakerPin, 500, 200);
+  delay(400);
+  tone(SpeakerPin, 500, 400);
   delay(200);
 }
