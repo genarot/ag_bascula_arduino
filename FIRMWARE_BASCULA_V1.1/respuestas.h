@@ -1,5 +1,3 @@
-
-
 //"Tara completada"
 #define TARA_COMPLETADA "TC"
 
@@ -49,3 +47,6 @@
 
 //Bascula lista para recibier nuevo password
 #define NEW_PASS "NEW_PASS"
+
+//Bascula confirmando el cambio de tara
+#define NEW_TAR "NEW_TAR"
