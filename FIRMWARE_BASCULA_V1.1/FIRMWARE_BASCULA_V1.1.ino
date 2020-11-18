@@ -46,7 +46,7 @@ void setup() {
   long stabilizingtime = 2000;
   boolean _tare = false;
   LoadCell.startMultiple(stabilizingtime, _tare);
-  LoadCell.tare();
+  //LoadCell.tare();
   if (LoadCell.getTareTimeoutFlag() || LoadCell.getSignalTimeoutFlag()) {
     BT.println("ERROR; REVISAR CONEXIONES CON MODULO HX711");
     while (1);
@@ -61,11 +61,11 @@ void setup() {
     if (isnan(taraManual)) {
       taraManual = 0;
     }
-    if (LoadCell.getTareStatus() == true) {
+    //if (LoadCell.getTareStatus() == true) {
       BT.println("INICIO COMPLETADO");
       delay(1000);
 
-    }
+    // }
   }
   tone(SpeakerPin, 2500, 100);
   delay(200);
@@ -80,7 +80,7 @@ void loop() {
   if (newDataReady) {
     if (millis() > t + serialPrintInterval) {
       float i = LoadCell.getData();
-      if (state == 1) {
+      if (state > 1) {
         i = ((int)(i * 100) / 100.00);
         if (abs(i) < 0.1) {
           i = 0;
@@ -97,13 +97,21 @@ void loop() {
           oldi = ((int)(oldi * 100) / 100.00);
         }
         iAfterTara = oldi - taraManual;
-        if (units == 1) {
+        if (units == 1 && state == 1) {
           iAfterTara = (iAfterTara / 0.453592);
           iAfterTara = ((int)(iAfterTara * 100) / 100.00);
         }
+        else if (units == 1 && state == 2) {
+          oldi = (oldi / 0.453592);
+          oldi = ((int)(oldi * 100) / 100.00);
+        }
 
-
-        env = String(iAfterTara, 2);
+        if (state == 1) {
+          env = String(iAfterTara, 2);
+        }
+        else if (state == 2) {
+          env = String(oldi, 2);
+        }
         BT.println(env);
       }
       newDataReady = 0;
@@ -158,6 +166,9 @@ void loop() {
       case 'f':
         taraManual = setTara(env, oldi);
         oneTone;
+        break;
+      case'g':
+        state = 2;
         break;
     }
   }
@@ -393,8 +404,8 @@ void envTara() {
   if (isnan(tara)) {
     tara = 0;
   }
-  else if (units==1){
-    tara= (tara*0.453592);
+  else if (units == 1) {
+    tara = (tara * 0.453592);
     tara = ((int)(tara * 100) / 100.00);
   }
   BT.println(tara);
