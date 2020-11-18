@@ -25,6 +25,7 @@ String env = "0.000";
 byte state = 0;
 float calVal;
 byte units = 0;
+float taraManual;
 
 
 void setup() {
@@ -55,6 +56,10 @@ void setup() {
       calVal = 1;
     }
     LoadCell.setCalFactor(calVal);
+    EEPROM.get(tara_eepromAdress, taraManual);
+    if (isnan(taraManual)) {
+      taraManual = 0;
+    }
     if (LoadCell.getTareStatus() == true) {
       BT.println("INICIO COMPLETADO");
       delay(1000);
@@ -148,7 +153,7 @@ void loop() {
         oneTone();
         break;
       case 'f':
-        setTara(env, oldi);
+        taraManual = setTara(env, oldi);
         oneTone;
         break;
     }
@@ -389,7 +394,7 @@ void envTara() {
   twoTones();
 }
 
-void setTara(String env, float oldi) {
+float setTara(String env, float oldi) {
   float newTara;
   twoTones();
   BT.println(env);
@@ -404,6 +409,7 @@ void setTara(String env, float oldi) {
   BT.println(NEW_TAR);
   oneTone();
   envTara();
+  return newTara;
 }
 
 void oneTone() {
