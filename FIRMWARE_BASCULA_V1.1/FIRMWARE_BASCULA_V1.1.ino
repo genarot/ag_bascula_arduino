@@ -11,6 +11,7 @@ const int BTTxPin = 11;
 const int SpeakerPin = 13;
 const int Tx = 4;
 const int Blue = 3;
+const float conv = 0.45359237;
 
 //HX711 constructor:
 HX711_ADC LoadCell(HX711_dout, HX711_sck);
@@ -27,6 +28,7 @@ float calVal;
 byte units = 0;
 float taraManual;
 float iAfterTara = 0.0;
+float vKilo;
 
 
 void setup() {
@@ -46,7 +48,7 @@ void setup() {
   long stabilizingtime = 2000;
   boolean _tare = false;
   LoadCell.startMultiple(stabilizingtime, _tare);
-  //LoadCell.tare();
+  LoadCell.tare();
   if (LoadCell.getTareTimeoutFlag() || LoadCell.getSignalTimeoutFlag()) {
     BT.println("ERROR; REVISAR CONEXIONES CON MODULO HX711");
     while (1);
@@ -61,11 +63,11 @@ void setup() {
     if (isnan(taraManual)) {
       taraManual = 0;
     }
-    //if (LoadCell.getTareStatus() == true) {
+    if (LoadCell.getTareStatus() == true) {
       BT.println("INICIO COMPLETADO");
       delay(1000);
 
-    // }
+     }
   }
   tone(SpeakerPin, 2500, 100);
   delay(200);
@@ -80,7 +82,7 @@ void loop() {
   if (newDataReady) {
     if (millis() > t + serialPrintInterval) {
       float i = LoadCell.getData();
-      if (state > 1) {
+      if (state >= 1) {
         i = ((int)(i * 100) / 100.00);
         if (abs(i) < 0.1) {
           i = 0;
@@ -98,11 +100,12 @@ void loop() {
         }
         iAfterTara = oldi - taraManual;
         if (units == 1 && state == 1) {
-          iAfterTara = (iAfterTara / 0.453592);
+          iAfterTara = (iAfterTara / conv);
           iAfterTara = ((int)(iAfterTara * 100) / 100.00);
         }
         else if (units == 1 && state == 2) {
-          oldi = (oldi / 0.453592);
+          vKilo = oldi;
+          oldi = (oldi / conv);
           oldi = ((int)(oldi * 100) / 100.00);
         }
 
@@ -164,7 +167,7 @@ void loop() {
         oneTone();
         break;
       case 'f':
-        taraManual = setTara(env, oldi);
+        taraManual = setTara(vKilo, oldi);
         oneTone;
         break;
       case'g':
@@ -405,20 +408,19 @@ void envTara() {
     tara = 0;
   }
   else if (units == 1) {
-    tara = (tara * 0.453592);
+    tara = (tara / conv);
     tara = ((int)(tara * 100) / 100.00);
   }
   BT.println(tara);
   twoTones();
 }
 
-float setTara(String env, float oldi) {
+float setTara(float vKilo, float oldi) {
   float newTara;
   twoTones();
   //BT.println(env);
   if (units == 1) {
-    newTara = (oldi * 0.453592);
-    newTara = ((int)(newTara * 100) / 100.00);
+    newTara = vKilo;
   }
   else {
     newTara = oldi;
