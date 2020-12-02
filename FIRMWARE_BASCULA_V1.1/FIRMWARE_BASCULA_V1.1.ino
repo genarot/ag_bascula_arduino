@@ -20,6 +20,8 @@ SoftwareSerial BT(BTRxPin, BTTxPin  );
 const int tara_eepromAdress = 20;
 const int pass_eepromAdress = 16;
 const int calVal_eepromAdress = 0;
+int decimales = 2;
+float sens = 0.03;
 long t;
 float oldi = 0.0;
 String env = "0.000";
@@ -67,7 +69,7 @@ void setup() {
       BT.println("INICIO COMPLETADO");
       delay(1000);
 
-     }
+    }
   }
   tone(SpeakerPin, 2500, 100);
   delay(200);
@@ -88,13 +90,13 @@ void loop() {
           i = 0;
           oldi = 0;
         }
-        else if (abs(i - oldi) > 0.03) {
+        else if (abs(i - oldi) > sens) {
 
           oldi = i;
           oldi = ((int)(oldi * 100) / 100.00);
 
         }
-        else if (abs(i - oldi) < 0.03) {
+        else if (abs(i - oldi) < sens) {
           oldi = ((4 * oldi + i) / 5);
           oldi = ((int)(oldi * 100) / 100.00);
         }
@@ -110,10 +112,10 @@ void loop() {
         }
 
         if (state == 1) {
-          env = String(iAfterTara, 2);
+          env = String(iAfterTara, decimales);
         }
         else if (state == 2) {
-          env = String(oldi, 2);
+          env = String(oldi, decimales);
         }
         BT.println(env);
       }
@@ -172,6 +174,10 @@ void loop() {
         break;
       case'g':
         state = 2;
+        break;
+      case 'd':
+        decimales = setDecimales();
+        sens = 3 * (pow(0.1, decimales));
         break;
     }
   }
@@ -455,4 +461,16 @@ void error() {
   delay(400);
   tone(SpeakerPin, 500, 400);
   delay(200);
+}
+
+int setDecimales() {
+  int inData;
+  while (1) {
+    if (BT.available() > 0) {
+      inData = BT.parseInt();
+      if (!isnan(inData)) {
+        return inData;
+      }
+    }
+  }
 }
